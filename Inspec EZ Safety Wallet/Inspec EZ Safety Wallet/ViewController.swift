@@ -10,8 +10,18 @@ import UIKit
 import WebKit
 
 class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+    
+    var SAVE_PASSWORD_KEY: String = "save_password"
+    var USERNAME_KEY: String = "username"
+    var PASSWORD_KEY: String = "password"
+    
+    var SAVE_PASSWORD_STATE_NOTNOW: Int = 0
+    var SAVE_PASSWORD_STATE_NEVER: Int = 1
+    var SAVE_PASSWORD_STATE_SAVED: Int = 2
 
     var webView: WKWebView!
+    var m_strCurUserName: String!
+    var m_strCurPassword: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,6 +46,39 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
         
     }
     
+    func checkState() {
+        let state: Int = UserDefaults.standard.integer(forKey: SAVE_PASSWORD_KEY)
+        
+        if state == SAVE_PASSWORD_STATE_NOTNOW {
+            // create the alert
+            let alert = UIAlertController(title: "Save Password", message: "Would you like to save this password for the app?", preferredStyle: UIAlertController.Style.alert)
+            
+            // add the actions (buttons)
+            alert.addAction(UIAlertAction(title: "Save", style: UIAlertAction.Style.default, handler: { action in
+                self.saveState(value: self.SAVE_PASSWORD_STATE_SAVED)
+                self.saveUserInfo()
+            }))
+            alert.addAction(UIAlertAction(title: "Never", style: UIAlertAction.Style.destructive, handler: { action in
+                self.saveState(value: self.SAVE_PASSWORD_STATE_NEVER)
+            }))
+            alert.addAction(UIAlertAction(title: "Not Now", style: UIAlertAction.Style.cancel, handler: { action in
+                self.saveState(value: self.SAVE_PASSWORD_STATE_NOTNOW)
+            }))
+            
+            // show the alert
+            self.present(alert, animated: true, completion: nil)
+        }
+    }
+    
+    func saveState(value: Int) {
+        UserDefaults.standard.set(value, forKey: SAVE_PASSWORD_KEY)
+    }
+    
+    func saveUserInfo() {
+        UserDefaults.standard.set(m_strCurUserName, forKey: USERNAME_KEY)
+        UserDefaults.standard.set(m_strCurPassword, forKey: PASSWORD_KEY)
+    }
+    
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         
         let body = message.body as! String
@@ -45,14 +88,19 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
         let saveType = "save"
         let loadType = "load"
         if(type.caseInsensitiveCompare(saveType) == .orderedSame){
-            let key = data[1]
-            let value = data[2]
+            let username = data[1]
+            let password = data[2]
+            
+            m_strCurUserName = username
+            m_strCurPassword = password
+            
             
             NSLog("*************key value********")
-            NSLog(key)
-            NSLog(value)
+            NSLog(username)
+            NSLog(password)
             
-            UserDefaults.standard.set(value, forKey: key)
+            checkState()
+            //UserDefaults.standard.set(value, forKey: key)
         } else if (type.caseInsensitiveCompare(loadType) == .orderedSame) {
             let key1 = data[1]
             let key2 = data[2]
