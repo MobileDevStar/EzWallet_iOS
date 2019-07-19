@@ -48,8 +48,12 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
     
     func checkState() {
         let state: Int = UserDefaults.standard.integer(forKey: SAVE_PASSWORD_KEY)
+        let prevUsername: String = UserDefaults.standard.string(forKey: USERNAME_KEY) ?? ""
+        let prevPasswrod: String = UserDefaults.standard.string(forKey: PASSWORD_KEY) ?? ""
+        let blChangedUsername: Bool = prevUsername != m_strCurUserName
+        let blChangedPassword: Bool = prevPasswrod != m_strCurPassword
         
-        if state == SAVE_PASSWORD_STATE_NOTNOW {
+        if (state == SAVE_PASSWORD_STATE_NOTNOW || blChangedUsername || blChangedPassword) {
             // create the alert
             let alert = UIAlertController(title: "Save Password", message: "Would you like to save this password for the app?", preferredStyle: UIAlertController.Style.alert)
             
